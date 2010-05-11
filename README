@@ -9,6 +9,7 @@ Please read accompanying file COPYING.
 
 System Requirements:
  - Software
+  - Ruby 1.9.1 or later
   - Nendo programming language 0.3.2 or later
   - Tokyo Cabinet 1.4.x
   - Tokyo Tyrant-1.1.x
