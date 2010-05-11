@@ -7,9 +7,11 @@
 (load-library "debug/syslog")
 (require "cgi")
 (require "RMagick")
+(require "tokyocabinet")
 
 ;; ------ Please edit for your site -------
 (define fontbase "/usr/local/lib/dekamoji.fonts/")
+(define dbpath   "/usr/local/var/dekamoji_image.tch")
 ;; ----------------------------------------
 
 (define font-list `(
@@ -29,7 +31,7 @@
                     (5 . "サイズ特大")
                     ))
 
-(define (response-dekamoji str pointsize fontpath)
+(define (generate-dekamoji-image str pointsize fontpath)
   (define (blur image width)
     (image.blur_channel 0 width Magick::AllChannels))
   (let* ((font-dots pointsize)
@@ -52,6 +54,28 @@
         (dr.annotate image2  0 0 0 0 str)
         (let1 image3 (blur image2 0.5)
           (image3.to_blob))))))
+
+
+(define (calc-db-key str pointsize fonttype)
+  (sprintf "str=%s,size=%s,type=%s" str pointsize fonttype))
+
+;; testing:  generate db-key
+(if #f
+    (pretty-print
+     (calc-db-key "デカ文字" 80 2)))
+
+(define (response-dekamoji str pointsize fonttype fontpath)
+  (let ((key (calc-db-key str pointsize fonttype))
+        (db  (TokyoCabinet::HDB.new)))
+    (db.open dbpath (+ TokyoCabinet::HDB::OWRITER TokyoCabinet::HDB::OCREAT))
+    (let1 result (hash-table-get db key #f)
+      (begin0
+        (if result
+            result
+            (begin
+              (hash-table-put! db key (generate-dekamoji-image str pointsize fontpath))
+              (hash-table-get  db key)))
+        (db.close)))))
 
 
 ;; -----------------------------------
@@ -92,7 +116,7 @@
           (html:title "デカ文字作成"))
         ,(html:body
           (html:div :style "text-align: center; "
-                    (html:h1 "デカ文字作成")
+                    (html:img :src "/img/dekamoji_logo.png")
                     (html:p  "文章を入れて『画像化』ボタンを押して下さい")
                     (html:form  :method "POST" :action "./dekamoji.cgi"
                                 (html:input :name "w"       :type "text" :size 60 :value wording)
@@ -129,26 +153,31 @@
 ;; -----------------------------------
 ;; entry point
 ;; -----------------------------------
-(if #f
-    ;; testing
-    (display
-     (response-dekamoji
-      "デカ文字"
-      80
-      (+ fontbase "/IPAfont00302/ipam.ttf")))
-    ;; release
-    (let1 cgi (CGI.new)
-      (cond ((hash-table-exist? cgi.params "img")
-             (cgi.print
-              (cgi.header "image/png"))
-             (cgi.print
-              (response-dekamoji
-               (car (to-list (hash-table-get cgi.params "w")))
-               (assv-ref (car (to-list (hash-table-get cgi.params "size")))  fontsize-alist)
-               (second (assv-ref (car (to-list (hash-table-get cgi.params "type"))) font-list)))))
-            (else
-             (cgi.print
-              (cgi.header))
-             (cgi.print
-              (tree->string
-               (top-page cgi.params)))))))
+(cond
+ (#f
+  ;; testing:  generate font
+  (display
+   (response-dekamoji
+    "ゴシック"
+    200
+    2
+    (+ fontbase "ipamp.ttf"))))
+ 
+ ;; release
+ (else
+  (let1 cgi (CGI.new)
+    (cond ((hash-table-exist? cgi.params "img")
+           (cgi.print
+            (cgi.header "image/png"))
+           (cgi.print
+            (response-dekamoji
+             (car (to-list (hash-table-get cgi.params "w")))
+             (assv-ref (car (to-list (hash-table-get cgi.params "size")))  fontsize-alist)
+             (car (to-list (hash-table-get cgi.params "type")))
+             (second (assv-ref (car (to-list (hash-table-get cgi.params "type"))) font-list)))))
+          (else
+           (cgi.print
+            (cgi.header))
+           (cgi.print
+            (tree->string
+             (top-page cgi.params))))))))
