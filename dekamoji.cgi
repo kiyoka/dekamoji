@@ -13,9 +13,9 @@
 ;; ----------------------------------------
 
 (define font-list `(
-                    ("1" "ゴシック" ,(+ fontbase "ipagp.ttf"))
-                    ("2" "明朝"     ,(+ fontbase "ipamp.ttf"))
-                    ("3" "あんず"   ,(+ fontbase "APJapanesefont.ttf"))
+                    ("1" "ゴシック"    ,(+ fontbase "ipagp.ttf"))
+                    ("2" "明朝"        ,(+ fontbase "ipamp.ttf"))
+                    ("3" "あんずもじ"  ,(+ fontbase "APJapanesefont.ttf"))
                     ))
 (define default-fonttype 2)
 
