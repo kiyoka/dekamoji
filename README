@@ -7,3 +7,12 @@ This software is open source, covered by a BSD-style license.
 Please read accompanying file COPYING.
 
 
+System Requirements:
+ - Software
+  - Nendo programming language 0.3.2 or later
+  - Tokyo Cabinet 1.4.x
+  - Tokyo Tyrant-1.1.x
+  - rmagick 2.13.1 or later
+ - Font
+  - IPA font (TrueType font)
+  - ANZUMOJI (TrueType font)
