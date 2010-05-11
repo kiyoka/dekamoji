@@ -9,7 +9,7 @@
 (require "RMagick")
 
 ;; ------ Please edit for your site -------
-(define fontbase "/usr/local/lib/IPAfont-0302/")
+(define fontbase "/usr/local/lib/dekamoji.fonts/")
 ;; ----------------------------------------
 
 (define font-list `(
