@@ -153,31 +153,32 @@
 ;; -----------------------------------
 ;; entry point
 ;; -----------------------------------
-(cond
- (#f
-  ;; testing:  generate font
-  (display
-   (response-dekamoji
-    "ゴシック"
-    200
-    2
-    (+ fontbase "ipamp.ttf"))))
- 
- ;; release
- (else
-  (let1 cgi (CGI.new)
-    (cond ((hash-table-exist? cgi.params "img")
-           (cgi.print
-            (cgi.header "image/png"))
-           (cgi.print
-            (response-dekamoji
-             (car (to-list (hash-table-get cgi.params "w")))
-             (assv-ref (car (to-list (hash-table-get cgi.params "size")))  fontsize-alist)
-             (car (to-list (hash-table-get cgi.params "type")))
-             (second (assv-ref (car (to-list (hash-table-get cgi.params "type"))) font-list)))))
-          (else
-           (cgi.print
-            (cgi.header))
-           (cgi.print
-            (tree->string
-             (top-page cgi.params))))))))
+(define (main argv)
+  (cond
+   (#f
+    ;; testing:  generate font
+    (display
+     (response-dekamoji
+      "ゴシック"
+      200
+      2
+      (+ fontbase "ipamp.ttf"))))
+   
+   ;; release
+   (else
+    (let1 cgi (CGI.new)
+      (cond ((hash-table-exist? cgi.params "img")
+             (cgi.print
+              (cgi.header "image/png"))
+             (cgi.print
+              (response-dekamoji
+               (car (to-list (hash-table-get cgi.params "w")))
+               (assv-ref (car (to-list (hash-table-get cgi.params "size")))  fontsize-alist)
+               (car (to-list (hash-table-get cgi.params "type")))
+               (second (assv-ref (car (to-list (hash-table-get cgi.params "type"))) font-list)))))
+            (else
+             (cgi.print
+              (cgi.header))
+             (cgi.print
+              (tree->string
+               (top-page cgi.params)))))))))
