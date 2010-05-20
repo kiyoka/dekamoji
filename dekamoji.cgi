@@ -155,8 +155,8 @@
 ;; -----------------------------------
 (define (main argv)
   (cond
-   (#f
-    ;; testing:  generate font
+   (#t
+    (set! dbpath   "./dekamoji_image.tch")
     (display
      (response-dekamoji
       "ゴシック"
