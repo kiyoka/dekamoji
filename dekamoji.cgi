@@ -2,12 +2,18 @@
 :; #-*- mode: nendo; syntax: scheme -*-;;
 :; exec /usr/local/bin/nendo $0 $*
 
+;; 
+;; This cgi needs tokyotyrant server on localhost as:
+;;     ttserver /var/ttserver/dekamoji_image.tch
+;;
+
+
 (load-library "text/html-lite")
 (load-library "text/tree")
 (load-library "debug/syslog")
 (require "cgi")
 (require "RMagick")
-(require "tokyocabinet")
+(require "tokyotyrant")
 
 ;; ------ Please edit for your site -------
 (define fontbase "/usr/local/lib/dekamoji.fonts/")
@@ -30,6 +36,16 @@
                     (4 . "サイズ大")
                     (5 . "サイズ特大")
                     ))
+
+(define fontsize-alist '(
+                         ("1" . 20)
+                         ("2" . 40)
+                         ("3" . 80)
+                         ("4" . 160)
+                         ("5" . 320)
+                         ))
+
+
 
 (define (generate-dekamoji-image str pointsize fontpath)
   (define (blur image width)
@@ -66,8 +82,9 @@
 
 (define (response-dekamoji str pointsize fonttype fontpath)
   (let ((key (calc-db-key str pointsize fonttype))
-        (db  (TokyoCabinet::HDB.new)))
-    (db.open dbpath (+ TokyoCabinet::HDB::OWRITER TokyoCabinet::HDB::OCREAT))
+        (db  (TokyoTyrant::RDB.new)))
+    (when (not (db.open "127.0.0.1" 1978))
+      (STDERR.printf "TC open error: %s\n" (db.errmsg db.ecode)))
     (let1 result (hash-table-get db key #f)
       (begin0
         (if result
@@ -75,7 +92,8 @@
             (begin
               (hash-table-put! db key (generate-dekamoji-image str pointsize fontpath))
               (hash-table-get  db key)))
-        (db.close)))))
+        (when (not (db.close))
+          (STDERR.printf "TC close error: %s\n" (db.errmsg db.ecode)))))))
 
 
 ;; -----------------------------------
@@ -142,27 +160,20 @@
                       (html:p "no image")))
                     (html:hr)))))))
 
-(define fontsize-alist '(
-                         ("1" . 20)
-                         ("2" . 40)
-                         ("3" . 80)
-                         ("4" . 160)
-                         ("5" . 320)
-                         ))
-
 ;; -----------------------------------
 ;; entry point
 ;; -----------------------------------
 (define (main argv)
   (cond
-   (#t
+   (#f
     (set! dbpath   "./dekamoji_image.tch")
     (display
      (response-dekamoji
       "ゴシック"
       200
       2
-      (+ fontbase "ipamp.ttf"))))
+      (+ fontbase "ipamp.ttf")))
+    0)
    
    ;; release
    (else
