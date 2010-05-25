@@ -123,11 +123,9 @@
         (car (to-list (hash-table-get params key)))
         default-value))
   
-  (let ((size     (to-i (get-param params "size"    default-size)))
-        (wording        (get-param params "w"       #f))
+  (let ((wording        (get-param params "w"       #f))
         (fonttype (to-i (get-param params "type"    default-fonttype))))
-    (let ((size         (calc-limit 1 size     (length size-list)))
-          (fonttype     (calc-limit 1 fonttype (length font-list))))
+    (let ((fonttype     (calc-limit 1 fonttype (length font-list))))
       `(
         ,(html-doctype)
         ,(html:head
@@ -140,22 +138,23 @@
                                 (html:input :name "w"       :type "text" :size 60 :value wording)
                                 (html:br)
                                 (map (lambda (x) (list
-                                                  (html:input :name "size"    :type "radio"   :value (car x)
-                                                              :CHECKED (eq? (car x) size))
-                                                  (cdr x)))
-                                     size-list)
-                                (html:br)
-                                (map (lambda (x) (list
                                                   (html:input :name "type"    :type "radio"   :value (car x)
                                                               :CHECKED (eq? (to-i (car x)) fonttype))
                                                   (second x)))
                                      font-list)
                                 (html:br)
                                 (html:input :type "submit"  :value "画像化"))
-                    (html:hr)
+                    (html:hr))
+          (html:div :style "text-align: left; "
                     (cond
-                     (wording
-                      (html:img :src (sprintf "./dekamoji.cgi?img=1&size=%d&type=%s&w=%s" size fonttype (encode-wording wording))))
+                     ((and wording
+                           (< 0 (wording.size)))
+                      (map
+                       (lambda (x)
+                         (list
+                          (html:img :src (sprintf "./dekamoji.cgi?img=1&size=%d&type=%s&w=%s" #?=(car x) fonttype (encode-wording wording)))
+                          (html:br)))
+                       size-list))
                      (else
                       (html:p "no image")))
                     (html:hr)))))))
